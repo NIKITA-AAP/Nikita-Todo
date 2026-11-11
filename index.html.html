@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kaam ki list</title>
+<style>
+:root{
+  --bg:#eef1f8;--surface:#fff;--ink:#16203a;--soft:#6a7491;--line:#dfe4f0;
+  --accent:#4a5df0;--accent-ink:#fff;--hot:#e5484d;--ok:#2e9e6b;
+  --font:"Avenir Next","Segoe UI",Roboto,"Noto Sans",system-ui,sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#0f1424;--surface:#192038;--ink:#e8ecfa;--soft:#8c97b8;--line:#2a3354;--accent:#7b8cff;--accent-ink:#0f1424;--hot:#ff6b70;--ok:#4cc38a}
+}
+:root[data-theme="dark"]{--bg:#0f1424;--surface:#192038;--ink:#e8ecfa;--soft:#8c97b8;--line:#2a3354;--accent:#7b8cff;--accent-ink:#0f1424;--hot:#ff6b70;--ok:#4cc38a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:100vh;padding:28px 18px 60px}
+main{max-width:560px;margin:0 auto}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-size:30px;font-weight:700;letter-spacing:-.5px}
+header p{color:var(--soft);margin-top:4px;font-size:15px}
+#theme{background:none;border:1px solid var(--line);color:var(--ink);border-radius:12px;width:42px;height:42px;font-size:18px;cursor:pointer}
+.progress{height:8px;border-radius:4px;background:var(--line);margin:22px 0 6px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--ok);border-radius:4px;transition:width .35s}
+#pt{font-size:13px;color:var(--soft)}
+form{display:grid;grid-template-columns:1fr auto;gap:8px;margin:18px 0 8px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:10px}
+form input[type=text]{grid-column:1/-1;border:0;background:none;color:var(--ink);font:inherit;font-size:17px;padding:8px 8px 4px;outline:0}
+.opts{display:flex;gap:8px;flex-wrap:wrap;padding:0 4px}
+.opts select,.opts input{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
+.add{background:var(--accent);color:var(--accent-ink);border:0;border-radius:12px;font:inherit;font-weight:600;padding:0 20px;cursor:pointer;min-height:40px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tabs{display:flex;gap:6px;margin:18px 0 10px}
+.tabs button{font:inherit;font-size:14px;color:var(--soft);background:none;border:1px solid transparent;border-radius:999px;padding:6px 14px;cursor:pointer}
+.tabs button[aria-pressed=true]{color:var(--ink);border-color:var(--line);background:var(--surface);font-weight:600}
+ul{list-style:none;padding:0;display:grid;gap:8px}
+li{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:12px 12px 12px 14px}
+li.hot{border-left-color:var(--hot)}
+li input[type=checkbox]{width:22px;height:22px;accent-color:var(--ok);cursor:pointer}
+.txt{font-size:16px;word-break:break-word}
+li.done .txt{text-decoration:line-through;color:var(--soft)}
+.meta{font-size:12px;color:var(--soft);margin-top:3px}
+.meta .late{color:var(--hot);font-weight:600}
+.row{display:flex;gap:4px}
+.row button{background:none;border:0;color:var(--soft);font-size:16px;cursor:pointer;border-radius:8px;width:34px;height:34px}
+.row button:hover{background:var(--bg);color:var(--ink)}
+.edit{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--accent);border-radius:8px;padding:6px 8px}
+.empty{text-align:center;color:var(--soft);padding:40px 10px}
+footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;color:var(--soft);font-size:14px}
+#clear{background:none;border:0;color:var(--hot);font:inherit;cursor:pointer;padding:6px}
+@media (prefers-reduced-motion:reduce){.progress i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div><h1 id="greet">Aaj ke kaam</h1><p id="date"></p></div>
+    <button id="theme" aria-label="Theme badlein">🌓</button>
+  </header>
+  <div class="progress"><i id="bar"></i></div>
+  <div id="pt"></div>
+
+  <form id="f">
+    <input type="text" id="t" placeholder="Naya kaam likhiye…" aria-label="Naya kaam" maxlength="200" required>
+    <div class="opts">
+      <select id="p" aria-label="Priority"><option value="n">Normal</option><option value="h">Zaroori</option></select>
+      <input type="date" id="d" aria-label="Last tareekh">
+    </div>
+    <button class="add" type="submit">Jodein</button>
+  </form>
+
+  <div class="tabs" role="group" aria-label="Filter">
+    <button data-f="all" aria-pressed="true">Sab</button>
+    <button data-f="active" aria-pressed="false">Baaki</button>
+    <button data-f="done" aria-pressed="false">Ho gaye</button>
+  </div>
+  <ul id="list"></ul>
+  <footer><span id="left"></span><button id="clear">Ho gaye hue hatayein</button></footer>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const KEY="kaam:v1",TH="kaam:theme";
+let todos=[],filter="all",editing=null;
+try{todos=JSON.parse(localStorage.getItem(KEY))||[];}catch(e){todos=[];}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(todos));}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
+
+// date + greeting
+const h=new Date().getHours();
+$("#greet").textContent=h<12?"Suprabhat":h<17?"Namaste":"Shubh sandhya";
+$("#date").textContent=new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"});
+
+// theme
+try{const t=localStorage.getItem(TH);if(t)document.documentElement.dataset.theme=t;}catch(e){}
+$("#theme").onclick=()=>{
+  const r=document.documentElement;
+  const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+  r.dataset.theme=dark?"light":"dark";
+  try{localStorage.setItem(TH,r.dataset.theme);}catch(e){}
+};
+
+function render(){
+  const total=todos.length,done=todos.filter(t=>t.done).length,left=total-done;
+  $("#bar").style.width=(total?done/total*100:0)+"%";
+  $("#pt").textContent=total?done+" / "+total+" kaam poore":"Abhi koi kaam nahi";
+  $("#left").textContent=left+" baaki";
+  $("#clear").hidden=!done;
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.f===filter));
+
+  let items=todos.filter(t=>filter==="all"||(filter==="done")===t.done);
+  items.sort((a,b)=>a.done-b.done||(b.p==="h")-(a.p==="h")||(a.due||"9").localeCompare(b.due||"9"));
+  if(!items.length){
+    $("#list").innerHTML='<li style="display:block;border-left-color:var(--line)" class="empty">'+
+      (filter==="done"?"Abhi koi kaam poora nahi hua.":filter==="active"?"Sab kaam ho gaye. Shabaash!":"Upar se apna pehla kaam jodiye.")+'</li>';
+    return;
+  }
+  $("#list").innerHTML=items.map(t=>{
+    const late=t.due&&!t.done&&t.due<today();
+    const dueTxt=t.due?new Date(t.due+"T00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"}):"";
+    const body=editing===t.id
+      ?'<input class="edit" id="ed" value="'+esc(t.text)+'" maxlength="200" aria-label="Kaam badlein">'
+      :'<div class="txt">'+esc(t.text)+'</div>'+((t.p==="h"||t.due)?'<div class="meta">'+(t.p==="h"?"Zaroori":"")+(t.p==="h"&&t.due?" · ":"")+(t.due?(late?'<span class="late">Der ho gayi, '+dueTxt+'</span>':dueTxt):"")+'</div>':"");
+    return '<li data-id="'+t.id+'" class="'+(t.done?"done ":"")+(t.p==="h"?"hot":"")+'">'+
+      '<input type="checkbox" '+(t.done?"checked":"")+' aria-label="Ho gaya">'+
+      '<div>'+body+'</div>'+
+      '<div class="row"><button data-a="edit" aria-label="Badlein">✎</button><button data-a="del" aria-label="Hatayein">✕</button></div></li>';
+  }).join("");
+  const ed=$("#ed");if(ed){ed.focus();ed.setSelectionRange(ed.value.length,ed.value.length);}
+}
+
+$("#f").addEventListener("submit",e=>{
+  e.preventDefault();
+  const text=$("#t").value.trim();if(!text)return;
+  todos.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text,p:$("#p").value,due:$("#d").value||"",done:false});
+  $("#t").value="";$("#d").value="";$("#p").value="n";
+  save();render();$("#t").focus();
+});
+
+$("#list").addEventListener("click",e=>{
+  const li=e.target.closest("li[data-id]");if(!li)return;
+  const t=todos.find(x=>x.id===li.dataset.id);if(!t)return;
+  const a=e.target.closest("button")?.dataset.a;
+  if(e.target.type==="checkbox"){t.done=e.target.checked;save();render();}
+  else if(a==="del"){todos=todos.filter(x=>x!==t);save();render();}
+  else if(a==="edit"){editing=t.id;render();}
+});
+$("#list").addEventListener("keydown",e=>{
+  if(e.target.id!=="ed")return;
+  if(e.key==="Enter"||e.key==="Escape"){
+    const t=todos.find(x=>x.id===editing),v=e.target.value.trim();
+    if(e.key==="Enter"&&v&&t){t.text=v;save();}
+    editing=null;render();
+  }
+});
+$("#list").addEventListener("focusout",e=>{
+  if(e.target.id==="ed"&&editing){
+    const t=todos.find(x=>x.id===editing),v=e.target.value.trim();
+    if(v&&t){t.text=v;save();}
+    editing=null;render();
+  }
+});
+document.querySelector(".tabs").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(b){filter=b.dataset.f;render();}
+});
+$("#clear").onclick=()=>{todos=todos.filter(t=>!t.done);save();render();};
+render();
+</script>
+</body>
+</html>
